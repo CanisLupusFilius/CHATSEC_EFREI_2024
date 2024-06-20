@@ -1,9 +1,3 @@
--- Crée la base de données si elle n'existe pas
-CREATE DATABASE IF NOT EXISTS BDD;
-
--- Utilise la base de données
-USE BDD;
-
 -- Crée la table utilisateurs si elle n'existe pas déjà
 CREATE TABLE IF NOT EXISTS utilisateurs (
     utilisateur_id SERIAL PRIMARY KEY,
