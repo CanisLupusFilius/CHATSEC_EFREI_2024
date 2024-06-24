@@ -1,1 +1,5 @@
 mo:mo
+lol:lol
+hello:hello
+nico:nico
+will:will
