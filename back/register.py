@@ -3,6 +3,10 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 import bcrypt
+import re
+
+mdp_valid = False
+email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
 
 # Configurer la connexion à la base de données
 conn = psycopg2.connect(
@@ -15,7 +19,18 @@ cursor = conn.cursor()
 
 # Prendre les informations de l'utilisateur
 nom = input("Entrez votre nom: ")
-email = input("Entrez votre email: ")
+mdp_valid = False
+while not mdp_valid:
+    email = input("Entrez votre email: ").strip()
+
+    # Vérifier le format de l'email
+    if re.match(email_regex, email):
+        email = email.lower()  # Convertir en minuscules
+        mdp_valid = True
+        print(f"Email valide: {email}")
+    else:
+        print("Adresse email invalide. Veuillez réessayer.")
+    
 mot_de_passe = input("Entrez votre mot de passe: ")
 
 # Générer une paire de clés RSA
