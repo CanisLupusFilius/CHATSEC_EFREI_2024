@@ -36,6 +36,8 @@ cle_publique = key.public_key().public_bytes(
 
 # Générer un sel et hasher le mot de passe
 sel_mot_de_passe = bcrypt.gensalt()
+sel_mot_de_passe_hex = sel_mot_de_passe  # Convertir en hexadécimal
+
 mot_de_passe_hash = bcrypt.hashpw(mot_de_passe.encode('utf-8'), sel_mot_de_passe)
 
 # Chiffrer la clé privée RSA avec le mot de passe (hashed)

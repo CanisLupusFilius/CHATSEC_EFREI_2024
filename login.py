@@ -16,7 +16,7 @@ mot_de_passe = input("Entrez votre mot de passe: ")
 
 # Récupérer les informations de l'utilisateur depuis la base de données
 cursor.execute("""
-    SELECT cle_publique_rsa, cle_privee_rsa_chiffree, sel_mot_de_passe, mot_de_passe_hash
+    SELECT sel_mot_de_passe, mot_de_passe_hash
     FROM utilisateurs
     WHERE email = %s
 """, (email,))
@@ -25,17 +25,16 @@ result = cursor.fetchone()
 if result is None:
     print("Utilisateur non trouvé")
 else:
-    cle_publique_rsa, cle_privee_rsa_chiffree, sel_mot_de_passe, mot_de_passe_hash = result
+    sel_mot_de_passe_db, mot_de_passe_hash_db = result
 
-    # Convertir les hash récupérés en format bytes
-    mot_de_passe_hash = mot_de_passe_hash.encode('utf-8') if isinstance(mot_de_passe_hash, str) else mot_de_passe_hash
-    sel_mot_de_passe = sel_mot_de_passe.encode('utf-8') if isinstance(sel_mot_de_passe, str) else sel_mot_de_passe
+    # Convertir les données de type memoryview en bytes
+    sel_mot_de_passe_db = bytes(sel_mot_de_passe_db)
+    mot_de_passe_hash_db = bytes(mot_de_passe_hash_db)
 
     # Vérifier le mot de passe
-    if bcrypt.checkpw(mot_de_passe.encode('utf-8'), mot_de_passe_hash):
+    if bcrypt.checkpw(mot_de_passe.encode('utf-8'), mot_de_passe_hash_db):
         print("Connexion réussie")
-        # Vous pouvez maintenant accéder aux autres informations comme cle_publique_rsa et cle_privee_rsa_chiffree
-        # selon vos besoins
+        # Vous pouvez maintenant accéder aux autres informations si nécessaire
     else:
         print("Mot de passe incorrect")
 
