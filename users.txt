@@ -1,4 +1,1 @@
-hello:hello
-hi:hi
-ciao:ciao
-nsm:nsm
+mo:mo

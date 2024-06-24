@@ -53,7 +53,7 @@ def send_message(sender, recipient, message):
     with open(MESSAGE_DATA_FILE, 'a') as file:
         file.write(f"{sender}:{recipient}:{message}\n")
 
-def get_messages_for_user(user):
+def get_messages_between_users(user1, user2):
     if not os.path.exists(MESSAGE_DATA_FILE):
         return []
 
@@ -64,9 +64,31 @@ def get_messages_for_user(user):
     for msg in messages:
         try:
             sender, recipient, message = msg.strip().split(':')
-            if user == sender or user == recipient:
+            if (sender == user1 and recipient == user2) or (sender == user2 and recipient == user1):
                 message_list.append({'sender': sender, 'recipient': recipient, 'message': message})
         except ValueError:
+            # Handle the error or log it
             print(f"Skipping malformed message: {msg.strip()}")
     
     return message_list
+
+def get_existing_discussions(current_user):
+    if not os.path.exists(MESSAGE_DATA_FILE):
+        return []
+
+    with open(MESSAGE_DATA_FILE, 'r') as file:
+        messages = file.readlines()
+    
+    discussions = set()
+    for msg in messages:
+        try:
+            sender, recipient, _ = msg.strip().split(':')
+            if sender == current_user:
+                discussions.add(recipient)
+            elif recipient == current_user:
+                discussions.add(sender)
+        except ValueError:
+            # Handle the error or log it
+            print(f"Skipping malformed message: {msg.strip()}")
+    
+    return list(discussions)
