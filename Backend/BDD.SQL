@@ -4,9 +4,9 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
     nom VARCHAR(100),
     email VARCHAR(100) UNIQUE,
     cle_publique_rsa TEXT NOT NULL,
-    cle_privee_rsa_chiffree TEXT NOT NULL,
-    sel_mot_de_passe TEXT NOT NULL,  -- Utilisé pour renforcer le chiffrement de la clé privée
-    mot_de_passe_hash TEXT NOT NULL
+    cle_privee_rsa_chiffree BYTEA NOT NULL,
+    sel_mot_de_passe BYTEA NOT NULL,  -- Utilisé pour renforcer le chiffrement de la clé privée
+    mot_de_passe_hash BYTEA NOT NULL
 );
 
 -- Crée la table discussions si elle n'existe pas déjà

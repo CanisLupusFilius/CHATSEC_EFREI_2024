@@ -1,9 +1,0 @@
-hello:hello:Salam khoya la bes
-hi:ciao:hi
-hi:hello:Sup
-hi:hello:What up
-nsm:hello:Salam
-hello:ciao:Salam Khoya
-hi:nsm:hello
-hi:mi:Salam
-mi:salam:Salam Salam

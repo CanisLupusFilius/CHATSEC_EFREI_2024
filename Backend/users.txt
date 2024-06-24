@@ -1,6 +1,0 @@
-hello:hello
-hi:hi
-ciao:ciao
-nsm:nsm
-mi:mi
-salam:salam
