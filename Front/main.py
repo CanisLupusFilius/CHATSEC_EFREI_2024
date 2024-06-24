@@ -1,17 +1,19 @@
 import tkinter as tk
+from tkinter import ttk
+from ttkthemes import ThemedTk
 from Pages.home import HomePage
 from Pages.login import LoginPage
 from Pages.signup import SignupPage
 from Pages.chatpage import ChatPage
 
-class App(tk.Tk):
+class App(ThemedTk):
     def __init__(self):
         super().__init__()
         self.title("CHATSEC")
         self.geometry("900x600")  # Set the initial size of the window
         self.minsize(800, 600)
         self.frames = {}
-        self.current_user = None  # To store the current logged in user
+        self.current_user = None  # To store the current logged-in user
 
         # Create a container frame to hold all other frames
         container = tk.Frame(self)

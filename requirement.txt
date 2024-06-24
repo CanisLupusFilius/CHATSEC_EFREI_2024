@@ -2,3 +2,5 @@ Git
 OpenSSL
 subprocess
 tkinter
+pip install ttkthemes
+pip install pillow
