@@ -1,0 +1,5 @@
+Git
+OpenSSL
+subprocess
+pip install psycopg2-binary bcrypt
+Parametres de la bdd et de la conexion a la bdd dans login.py et register.py
