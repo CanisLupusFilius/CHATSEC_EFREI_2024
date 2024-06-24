@@ -1,7 +1,6 @@
 import psycopg2
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 import bcrypt
 
@@ -40,7 +39,7 @@ sel_mot_de_passe = bcrypt.gensalt()
 mot_de_passe_hash = bcrypt.hashpw(mot_de_passe.encode('utf-8'), sel_mot_de_passe)
 
 # Chiffrer la clé privée RSA avec le mot de passe (hashed)
-cle_privee_chiffree = bcrypt.hashpw(cle_privee, mot_de_passe_hash)
+cle_privee_chiffree = bcrypt.hashpw(cle_privee, sel_mot_de_passe)
 
 # Insérer les informations dans la base de données
 cursor.execute("""

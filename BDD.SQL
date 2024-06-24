@@ -3,8 +3,8 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
     utilisateur_id SERIAL PRIMARY KEY,
     nom VARCHAR(100),
     email VARCHAR(100) UNIQUE,
-    clé_publique_rsa TEXT NOT NULL,
-    clé_privée_rsa_chiffrée TEXT NOT NULL,
+    cle_publique_rsa TEXT NOT NULL,
+    cle_privee_rsa_chiffree TEXT NOT NULL,
     sel_mot_de_passe TEXT NOT NULL,  -- Utilisé pour renforcer le chiffrement de la clé privée
     mot_de_passe_hash TEXT NOT NULL
 );
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS messages (
     message_id SERIAL PRIMARY KEY,
     discussion_id INT,
     utilisateur_id INT,
-    contenu_chiffré BYTEA NOT NULL,
-    clé_session_chiffrée BYTEA NOT NULL,
+    contenu_chiffre BYTEA NOT NULL,
+    cle_session_chiffree BYTEA NOT NULL,
     date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (discussion_id) REFERENCES discussions(discussion_id),
     FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(utilisateur_id)

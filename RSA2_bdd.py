@@ -62,7 +62,7 @@ def store_user(nom, email, mot_de_passe, private_key, public_key):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO utilisateurs (nom, email, clé_publique_rsa, clé_privée_rsa_chiffrée, sel_mot_de_passe, mot_de_passe_hash)
+        INSERT INTO utilisateurs (nom, email, cle_publique_rsa, cle_privee_rsa_chiffree, sel_mot_de_passe, mot_de_passe_hash)
         VALUES (%s, %s, %s, %s, %s, %s)
     """, (nom, email, public_key, base64.b64encode(encrypted_private_key).decode(), base64.b64encode(sel).decode(), hashed_password))
     conn.commit()
@@ -136,14 +136,14 @@ if __name__ == "__main__":
         # Récupération de la clé privée de l'utilisateur 2 pour le déchiffrement
         user2_private_key = get_private_key("user2@example.com", "password123")
         decrypt_message(user2_private_key, encrypted_file, decrypted_file)
-        print(f'Message déchiffré dans le fichier : {decrypted_file}')
+        print(f'Message dechiffre dans le fichier : {decrypted_file}')
         
         with open(decrypted_file, 'r') as file:
             decrypted_message = file.read()
-            print(f'Message déchiffré : {decrypted_message}')
+            print(f'Message dechiffre : {decrypted_message}')
 
         # Nettoyage des fichiers temporaires
         os.remove(encrypted_file)
         os.remove(decrypted_file)
     else:
-        print("Veuillez installer OpenSSL et ajouter son répertoire 'bin' au PATH.")
+        print("Veuillez installer OpenSSL et ajouter son repertoire 'bin' au PATH.")
