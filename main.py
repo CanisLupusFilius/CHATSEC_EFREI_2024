@@ -1,15 +1,17 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import tkinter as tk
-from tkinter import ttk
 from ttkthemes import ThemedTk
 from Front.Pages.home import HomePage
 from Front.Pages.login import LoginPage
 from Front.Pages.signup import SignupPage
 from Front.Pages.chatpage import ChatPage
-from Front.Pages.utils import *
 
 class App(ThemedTk):
     def __init__(self):
-        super().__init__()
+        super().__init__(theme="equilux")
         self.title("CHATSEC")
         self.geometry("900x600")  # Set the initial size of the window
         self.minsize(800, 600)

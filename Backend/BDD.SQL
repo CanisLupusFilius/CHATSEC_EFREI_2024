@@ -2,7 +2,6 @@
 CREATE TABLE IF NOT EXISTS utilisateurs (
     utilisateur_id SERIAL PRIMARY KEY,
     nom VARCHAR(100),
-    email VARCHAR(100) UNIQUE,
     cle_publique_rsa TEXT NOT NULL,
     cle_privee_rsa_chiffree BYTEA NOT NULL,
     sel_mot_de_passe BYTEA NOT NULL,  -- Utilisé pour renforcer le chiffrement de la clé privée

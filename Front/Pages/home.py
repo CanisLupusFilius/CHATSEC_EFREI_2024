@@ -16,17 +16,10 @@ class HomePage(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
     def create_widgets(self):
-        # Load the background image
-        self.background_image = Image.open("./Ressources/background_home.jpg")
-        self.background_photo = ImageTk.PhotoImage(self.background_image)
-
         # Create a Canvas to display the image
         self.canvas = tk.Canvas(self)
         self.canvas.grid(row=0, column=0, sticky="nsew")
-
-        # Add the image to the canvas
-        self.canvas.create_image(0, 0, anchor="nw", image=self.background_photo)
-
+        
         # Create text directly on the canvas
         self.text_id = self.canvas.create_text(400, 100, text="CHATSEC", font=("Helvetica", 18), fill="white", anchor="center")
 
@@ -45,7 +38,7 @@ class HomePage(tk.Frame):
         button_frame.grid_rowconfigure(0, weight=1)
         button_frame.grid_rowconfigure(1, weight=1)
         button_frame.grid_columnconfigure(0, weight=1)
-
+        
     def on_resize(self, event):
         # Resize the image to fit within the window dimensions
         width, height = event.width, event.height

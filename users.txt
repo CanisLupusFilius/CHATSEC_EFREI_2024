@@ -3,3 +3,7 @@ lol:lol
 hello:hello
 nico:nico
 will:will
+momo:momo
+momomo:momomo
+ZEBI:ZEBI
+Momo:momo

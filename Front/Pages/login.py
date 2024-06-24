@@ -1,6 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox
 from Front.Pages.utils import *
+import sys
+sys.path.append(".")
+from Backend.login import *
 
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -42,7 +45,7 @@ class LoginPage(tk.Frame):
     def login(self):
         username = self.username_entry.get()
         password = self.password_entry.get()
-        if verify_login(username, password):
+        if login_back(username, password):
             messagebox.showinfo("Login Info", "Successfully logged in!")
             self.controller.current_user = username  # Set the current user
             self.controller.show_frame("ChatPage")

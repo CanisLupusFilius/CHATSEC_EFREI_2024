@@ -1,6 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox
 from Front.Pages.utils import *
+import sys
+sys.path.append(".")
+from Backend.register import *
+
 
 class SignupPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -44,5 +48,6 @@ class SignupPage(tk.Frame):
         password = self.password_entry.get()
         if register_user(username, password):
             messagebox.showinfo("Signup Info", f"Account created for {username}!")
+            registering_back(username,password)
         else:
             messagebox.showerror("Signup Error", "Username already exists!")
