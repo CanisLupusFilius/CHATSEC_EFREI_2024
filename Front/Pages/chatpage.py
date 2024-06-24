@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
-from utils import get_user_list, send_message, get_messages_between_users, get_existing_discussions
 from datetime import datetime, timedelta
+from Front.Pages.utils import *
 
 class ChatPage(tk.Frame):
     def __init__(self, parent, controller, current_user):

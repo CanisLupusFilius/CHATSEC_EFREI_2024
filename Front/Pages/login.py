@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from utils import verify_login
+from Front.Pages.utils import *
 
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):

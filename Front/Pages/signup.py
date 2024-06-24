@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from utils import register_user
+from Front.Pages.utils import *
 
 class SignupPage(tk.Frame):
     def __init__(self, parent, controller):

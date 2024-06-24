@@ -1,10 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 from ttkthemes import ThemedTk
-from Pages.home import HomePage
-from Pages.login import LoginPage
-from Pages.signup import SignupPage
-from Pages.chatpage import ChatPage
+from Front.Pages.home import HomePage
+from Front.Pages.login import LoginPage
+from Front.Pages.signup import SignupPage
+from Front.Pages.chatpage import ChatPage
+from Front.Pages.utils import *
 
 class App(ThemedTk):
     def __init__(self):
