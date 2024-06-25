@@ -1,156 +1,94 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
-from datetime import datetime, timedelta
+from tkinter import ttk
 import sys
 sys.path.append(".")
 from Backend.discussions import get_discussions_for_user, send_message as backend_send_message, get_messages, get_discussion_by_participants, encrypt_message, create_discussion
 from Backend.users import get_user_list, get_user_id_from_username
 
-
 class ChatPage(tk.Frame):
     def __init__(self, parent, controller, current_user):
         super().__init__(parent)
         self.controller = controller
-        self.current_user = current_user  # Store the current user
-        self.chat_partner = None  # Store the chat partner
+        self.current_user = current_user
 
         self.create_widgets()
         self.update_existing_discussions()
 
     def create_widgets(self):
         left_frame = tk.Frame(self)
-        right_frame = tk.Frame(self)
+        self.notebook = ttk.Notebook(self)
 
         user_list_label = tk.Label(left_frame, text="Existing Discussions", font=("Helvetica", 16))
-        self.user_combobox = ttk.Combobox(left_frame, state="readonly")
         self.user_listbox = tk.Listbox(left_frame)
         self.user_listbox.bind("<<ListboxSelect>>", self.on_user_select)
-        self.user_combobox.bind("<<ComboboxSelected>>", self.start_chat)
-
-        self.update_user_combobox()
-
-        style = ttk.Style()
-        style.configure("TCombobox", padding=5, relief="flat")
+        new_chat_button = tk.Button(left_frame, text="New Chat", command=self.create_new_chat_tab)
         logout_button = tk.Button(left_frame, text="Logout", command=lambda: self.controller.show_frame("HomePage"))
 
         user_list_label.pack(fill="x")
         self.user_listbox.pack(fill="both", expand=True)
+        new_chat_button.pack(fill="x")
         logout_button.pack(fill="x")
 
-        # Banner Frame
-        banner_frame = tk.Frame(right_frame, bg="lightgray", height=30)
-        self.chat_partner_label = tk.Label(banner_frame, text="", anchor="w", bg="lightgray", font=("Helvetica", 12))
-        self.last_chat_date_label = tk.Label(banner_frame, text="", anchor="e", bg="lightgray", font=("Helvetica", 12))
-        self.chat_partner_label.pack(side=tk.LEFT, padx=10)
-        self.last_chat_date_label.pack(side=tk.RIGHT, padx=10)
-        banner_frame.pack(fill="x")
+        left_frame.pack(side=tk.LEFT, fill='y')
+        self.notebook.pack(side=tk.RIGHT, fill='both', expand=True)
 
-        self.chat_area = tk.Text(right_frame, state='disabled', wrap='word')
-        self.chat_area.tag_configure('sent', justify='right', background='#DCF8C6')
-        self.chat_area.tag_configure('received', justify='left', background='#FFFFFF')
-        self.chat_area.tag_configure('date', justify='center', font=('Helvetica', 8), foreground='gray')
-        message_entry_frame = tk.Frame(right_frame)
-        self.message_entry = tk.Entry(message_entry_frame)
-        send_button = tk.Button(message_entry_frame, text="Send", command=self.send_message)
+    def create_new_chat_tab(self):
+        new_chat_tab = tk.Frame(self.notebook)
+        user_list = tk.Listbox(new_chat_tab)
+        all_users = get_user_list()
+        available_users = [user for user in all_users if user != self.current_user]
+        for user in available_users:
+            user_list.insert(tk.END, user)
 
-        self.chat_area.pack(fill="both", expand=True)
-        self.message_entry.pack(side=tk.LEFT, fill="x", expand=True)
+        user_list.pack(fill="both", expand=True)
+        start_button = tk.Button(new_chat_tab, text="Start Chatting", command=lambda: self.start_chat(user_list.get(user_list.curselection())))
+        start_button.pack(fill="x")
+
+        self.notebook.add(new_chat_tab, text="New Chat")
+
+    def start_chat(self, selected_user):
+        if selected_user:
+            self.create_chat_tab(selected_user)
+            self.notebook.select(self.notebook.index("end")-1)
+
+    def create_chat_tab(self, chat_partner):
+        if any(self.notebook.tab(tab, option="text") == chat_partner for tab in self.notebook.tabs()):
+            return  # Prevent opening multiple tabs for the same chat
+
+        tab = tk.Frame(self.notebook)
+        chat_area = tk.Text(tab, state='disabled', wrap='word')
+        chat_area.pack(fill="both", expand=True)
+
+        message_entry_frame = tk.Frame(tab)
+        message_entry = tk.Entry(message_entry_frame)
+        message_entry.pack(side=tk.LEFT, fill="x", expand=True)
+        send_button = tk.Button(message_entry_frame, text="Send", command=lambda: self.send_message(message_entry, chat_partner, chat_area))
         send_button.pack(side=tk.RIGHT)
         message_entry_frame.pack(fill="x")
 
-        left_frame.pack(side=tk.LEFT, fill='y')
-        right_frame.pack(side=tk.RIGHT, fill='both', expand=True)
+        self.notebook.add(tab, text=chat_partner)  # Set the chat partner's name directly as the tab text
 
-    def update_user_combobox(self):
-        all_users = get_user_list()
-        existing_discussions = self.get_existing_discussions(self.current_user)
-        available_users = [user for user in all_users if user != self.current_user and user not in existing_discussions]
+        # Add a close button within the tab content area instead of the tab label
+        close_button = tk.Button(tab, text="X", command=lambda: self.close_tab(tab))
+        close_button.pack(side="top", anchor="e")
 
-        if available_users:
-            self.user_combobox['values'] = available_users
-            self.user_combobox.set("New Chat")
-            self.user_combobox.pack(fill="x")
-        else:
-            self.user_combobox.pack_forget()
+    def close_tab(self, tab):
+        self.notebook.forget(tab)
+        tab.destroy()
 
     def on_user_select(self, event):
         selection = self.user_listbox.curselection()
         if selection:
             selected_user = self.user_listbox.get(selection[0])
-            self.chat_partner = selected_user
-            self.update_messages()
+            self.create_chat_tab(selected_user)
 
-    def start_chat(self, event):
-        selected_user = self.user_combobox.get()
-        if selected_user != "New Chat":
-            self.chat_partner = selected_user
-            self.update_messages()
-            self.update_existing_discussions()
-
-    def send_message(self):
-        message = self.message_entry.get()
-        if self.chat_partner and message:
-            sender_id = get_user_id_from_username(self.current_user)
-            recipient_id = get_user_id_from_username(self.chat_partner)
-            discussion_id = get_discussion_by_participants([sender_id, recipient_id])
-            if not discussion_id:
-                discussion_id = create_discussion(f"{self.current_user}-{self.chat_partner}", [sender_id, recipient_id])
-            encrypted_content, session_key = encrypt_message(message)
-            backend_send_message(sender_id, discussion_id, encrypted_content, session_key)
-            self.update_messages()
-            self.update_existing_discussions()
-            self.message_entry.delete(0, tk.END)
-
-    def update_messages(self):
-        self.chat_area.config(state='normal')
-        self.chat_area.delete(1.0, tk.END)
-        last_message_time = None
-        last_chat_date = ""
-        today = datetime.now().date()
-        if self.chat_partner:
-            messages = self.get_messages_between_users(self.current_user, self.chat_partner)
-            for msg in messages:
-                msg_date = msg['date']  # This is already a datetime object
-                if last_message_time is None or msg_date - last_message_time >= timedelta(minutes=15):
-                    if msg_date.date() == today:
-                        display_date = msg_date.strftime("%I:%M %p")
-                    else:
-                        display_date = msg_date.strftime("%d/%m/%Y")
-                    self.chat_area.insert(tk.END, f"{display_date}\n", 'date')
-                tag = 'sent' if msg['sender'] == self.current_user else 'received'
-                self.chat_area.insert(tk.END, f"{msg['message']}\n", tag)
-                last_message_time = msg_date
-                last_chat_date = msg_date.strftime("%d/%m/%Y") if msg_date.date() != today else msg_date.strftime("%I:%M %p")
-        self.chat_area.config(state='disabled')
-        self.update_banner(last_chat_date)
-
+    def update_existing_discussions(self):
+        self.user_listbox.delete(0, tk.END)
+        existing_discussions = self.get_existing_discussions(self.current_user)
+        for discussion in existing_discussions:
+            self.user_listbox.insert(tk.END, discussion)
 
     def get_existing_discussions(self, current_user):
         user_id = get_user_id_from_username(current_user)
         discussions = get_discussions_for_user(user_id)
         return [d['partner_name'] for d in discussions]
-
-    def get_messages_between_users(self, current_user, chat_partner):
-        current_user_id = get_user_id_from_username(current_user)
-        chat_partner_id = get_user_id_from_username(chat_partner)
-        discussion_id = get_discussion_by_participants([current_user_id, chat_partner_id])
-        if not discussion_id:
-            return []
-        messages = get_messages(discussion_id)
-        return messages
-
-    def update_existing_discussions(self):
-        existing_discussions = self.get_existing_discussions(self.current_user)
-        self.user_listbox.delete(0, tk.END)
-        for user in existing_discussions:
-            self.user_listbox.insert(tk.END, user)
-
-        self.update_user_combobox()
-
-    def update_banner(self, last_chat_date):
-        if self.chat_partner:
-            self.chat_partner_label.config(text=f"Chat with: {self.chat_partner}")
-            self.last_chat_date_label.config(text=f"Last chat date: {last_chat_date}")
-        else:
-            self.chat_partner_label.config(text="")
-            self.last_chat_date_label.config(text="")
