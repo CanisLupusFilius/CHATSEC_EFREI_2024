@@ -38,6 +38,7 @@ def send_message(sender_id, discussion_id, encrypted_content, encrypted_session_
     cursor.close()
     conn.close()
 
+
 def get_messages(discussion_id):
     conn = psycopg2.connect(
         dbname="bdd",
@@ -56,7 +57,22 @@ def get_messages(discussion_id):
     messages = cursor.fetchall()
     cursor.close()
     conn.close()
-    return [{'content': message[0], 'session_key': message[1], 'date': message[2], 'sender': message[3]} for message in messages]
+
+    # Decrypt the messages
+    decrypted_messages = []
+    for message in messages:
+        encrypted_message = bytes(message[0])  # Convert memoryview to bytes
+        session_key = message[1]
+        decrypted_message = decrypt_message(encrypted_message, session_key)
+        decrypted_messages.append({
+            'message': decrypted_message,
+            'session_key': session_key,
+            'date': message[2],
+            'sender': message[3]
+        })
+    
+    return decrypted_messages
+
 
 def get_discussion_by_participants(participant_ids):
     conn = psycopg2.connect(
@@ -86,6 +102,12 @@ def encrypt_message(message):
         return None, None
     encrypted_message = cipher_suite.encrypt(message.encode('utf-8'))
     return encrypted_message, key
+
+
+def decrypt_message(encrypted_message, session_key):
+    cipher_suite = Fernet(session_key)
+    decrypted_message = cipher_suite.decrypt(encrypted_message).decode('utf-8')
+    return decrypted_message
 
 
 def get_discussions_for_user(user_id):

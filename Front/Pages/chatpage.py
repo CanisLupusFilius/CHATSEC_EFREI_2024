@@ -3,8 +3,9 @@ from tkinter import messagebox, ttk
 from datetime import datetime, timedelta
 import sys
 sys.path.append(".")
-from Backend.discussions import get_discussions_for_user, send_message as backend_send_message, get_messages, get_discussion_by_participants, encrypt_message
+from Backend.discussions import get_discussions_for_user, send_message as backend_send_message, get_messages, get_discussion_by_participants, encrypt_message, create_discussion
 from Backend.users import get_user_list, get_user_id_from_username
+
 
 class ChatPage(tk.Frame):
     def __init__(self, parent, controller, current_user):
@@ -109,7 +110,7 @@ class ChatPage(tk.Frame):
         if self.chat_partner:
             messages = self.get_messages_between_users(self.current_user, self.chat_partner)
             for msg in messages:
-                msg_date = datetime.strptime(msg['date'], "%Y-%m-%d %H:%M:%S")
+                msg_date = msg['date']  # This is already a datetime object
                 if last_message_time is None or msg_date - last_message_time >= timedelta(minutes=15):
                     if msg_date.date() == today:
                         display_date = msg_date.strftime("%I:%M %p")
@@ -122,6 +123,7 @@ class ChatPage(tk.Frame):
                 last_chat_date = msg_date.strftime("%d/%m/%Y") if msg_date.date() != today else msg_date.strftime("%I:%M %p")
         self.chat_area.config(state='disabled')
         self.update_banner(last_chat_date)
+
 
     def get_existing_discussions(self, current_user):
         user_id = get_user_id_from_username(current_user)
