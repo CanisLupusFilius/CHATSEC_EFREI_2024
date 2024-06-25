@@ -24,6 +24,7 @@ class ChatPage(tk.Frame):
         self.tabs = {}
         self.create_widgets()
         self.update_existing_discussions()
+        self.create_new_chat_tab()  # Ensure the "New Chat" tab is always open
 
     def create_widgets(self):
         left_frame = tk.Frame(self)
@@ -32,14 +33,24 @@ class ChatPage(tk.Frame):
         self.notebook = ttk.Notebook(right_frame)
 
         user_list_label = tk.Label(left_frame, text="CHATSEC", font=("Bodoni", 16))
-        self.user_listbox = tk.Listbox(left_frame)
-        self.user_listbox.bind("<<ListboxSelect>>", self.on_user_select)
-        new_chat_button = tk.Button(left_frame, text="New Chat", command=self.create_new_chat_tab_if_absent)
+
+        # Opened conversations
+        opened_label = tk.Label(left_frame, text="Opened Conversations", font=("Helvetica", 12, "bold"))
+        self.opened_listbox = tk.Listbox(left_frame)
+        self.opened_listbox.bind("<<ListboxSelect>>", self.on_opened_select)
+
+        # Unopened conversations
+        unopened_label = tk.Label(left_frame, text="Unopened Conversations", font=("Helvetica", 12, "bold"))
+        self.unopened_listbox = tk.Listbox(left_frame)
+        self.unopened_listbox.bind("<<ListboxSelect>>", self.on_unopened_select)
+
         logout_button = tk.Button(left_frame, text="Logout", command=lambda: self.controller.show_frame("HomePage"))
 
         user_list_label.pack(fill="x")
-        self.user_listbox.pack(fill="both", expand=True)
-        new_chat_button.pack(fill="x")
+        opened_label.pack(fill="x")
+        self.opened_listbox.pack(fill="both", expand=True)
+        unopened_label.pack(fill="x")
+        self.unopened_listbox.pack(fill="both", expand=True)
         logout_button.pack(fill="x")
 
         self.notebook.pack(fill="both", expand=True)
@@ -47,22 +58,26 @@ class ChatPage(tk.Frame):
         left_frame.pack(side=tk.LEFT, fill="y")
         right_frame.pack(side=tk.RIGHT, fill="both", expand=True)
 
-    def create_new_chat_tab_if_absent(self):
-        if "New Chat" not in (self.notebook.tab(tab, "text") for tab in self.notebook.tabs()):
-            self.create_new_chat_tab()
-
     def create_new_chat_tab(self):
+        if "New Chat" in (self.notebook.tab(tab, "text") for tab in self.notebook.tabs()):
+            return  # Prevent creating multiple "New Chat" tabs
+
         new_chat_tab = tk.Frame(self.notebook)
         user_list = tk.Listbox(new_chat_tab)
         all_users = get_user_list()
-        available_users = [user for user in all_users if user != self.current_user]
+        available_users = [user for user in all_users if user != self.current_user and user not in self.get_existing_discussions(self.current_user)]
         for user in available_users:
             user_list.insert(tk.END, user)
         user_list.pack(fill="both", expand=True)
         start_button = tk.Button(new_chat_tab, text="Start Chatting", command=lambda: self.start_chat(user_list.get(user_list.curselection())))
         start_button.pack(fill="x")
-        self.notebook.add(new_chat_tab, text="New Chat")
-        self.notebook.select(new_chat_tab)
+        
+        if self.notebook.tabs():
+            self.notebook.insert(0, new_chat_tab, text="New Chat")
+        else:
+            self.notebook.add(new_chat_tab, text="New Chat")
+        
+        self.notebook.select(new_chat_tab)  # Automatically switch to the "New Chat" tab
 
     def start_chat(self, selected_user):
         if selected_user:
@@ -70,6 +85,7 @@ class ChatPage(tk.Frame):
 
     def create_chat_tab(self, chat_partner):
         if chat_partner in self.tabs:
+            self.notebook.select(self.tabs[chat_partner]["tab"])
             return  # Prevent opening multiple tabs for the same chat
 
         tab = tk.Frame(self.notebook)
@@ -97,7 +113,7 @@ class ChatPage(tk.Frame):
         message_entry_frame.pack(fill="x")
 
         self.notebook.add(tab, text=chat_partner)
-        self.notebook.select(tab)
+        self.notebook.select(tab)  # Automatically switch to the newly created tab
 
         self.tabs[chat_partner] = {
             "tab": tab,
@@ -107,6 +123,7 @@ class ChatPage(tk.Frame):
         self.chat_partner = chat_partner
 
         self.update_messages(chat_partner)
+        self.update_existing_discussions()
 
     def send_message(self, chat_partner, message):
         if chat_partner and message:
@@ -126,18 +143,26 @@ class ChatPage(tk.Frame):
             tab_info = self.tabs[chat_partner]
             self.notebook.forget(tab_info["tab"])
             del self.tabs[chat_partner]
+            self.update_existing_discussions()
 
     def close_current_tab(self):
         current_tab = self.notebook.select()
-        if current_tab:
+        if current_tab and self.notebook.tab(current_tab, "text") != "New Chat":
             chat_partner = self.notebook.tab(current_tab, "text")
             self.notebook.forget(current_tab)
             del self.tabs[chat_partner]
+            self.update_existing_discussions()
 
-    def on_user_select(self, event):
-        selection = self.user_listbox.curselection()
+    def on_opened_select(self, event):
+        selection = self.opened_listbox.curselection()
         if selection:
-            selected_user = self.user_listbox.get(selection[0])
+            selected_user = self.opened_listbox.get(selection[0])
+            self.notebook.select(self.tabs[selected_user]["tab"])
+
+    def on_unopened_select(self, event):
+        selection = self.unopened_listbox.curselection()
+        if selection:
+            selected_user = self.unopened_listbox.get(selection[0])
             self.create_chat_tab(selected_user)
 
     def apply_message_tag(self, chat_area, message, sender):
@@ -178,7 +203,14 @@ class ChatPage(tk.Frame):
         return messages
 
     def update_existing_discussions(self):
-        existing_discussions = self.get_existing_discussions(self.current_user)
-        self.user_listbox.delete(0, tk.END)
-        for user in existing_discussions:
-            self.user_listbox.insert(tk.END, user)
+        all_discussions = self.get_existing_discussions(self.current_user)
+        opened_discussions = [user for user in all_discussions if user in self.tabs]
+        unopened_discussions = [user for user in all_discussions if user not in self.tabs]
+
+        self.opened_listbox.delete(0, tk.END)
+        for user in opened_discussions:
+            self.opened_listbox.insert(tk.END, user)
+
+        self.unopened_listbox.delete(0, tk.END)
+        for user in unopened_discussions:
+            self.unopened_listbox.insert(tk.END, user)
