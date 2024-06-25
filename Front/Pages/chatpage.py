@@ -28,6 +28,7 @@ class ChatPage(tk.Frame):
     def create_widgets(self):
         left_frame = tk.Frame(self)
         right_frame = tk.Frame(self)
+
         self.notebook = ttk.Notebook(right_frame)
 
         user_list_label = tk.Label(left_frame, text="CHATSEC", font=("Bodoni", 16))
@@ -41,8 +42,6 @@ class ChatPage(tk.Frame):
         new_chat_button.pack(fill="x")
         logout_button.pack(fill="x")
 
-        close_button = tk.Button(right_frame, text="X", command=self.close_current_tab)
-        close_button.pack(side="top", anchor="e")
         self.notebook.pack(fill="both", expand=True)
 
         left_frame.pack(side=tk.LEFT, fill="y")
@@ -74,6 +73,16 @@ class ChatPage(tk.Frame):
             return  # Prevent opening multiple tabs for the same chat
 
         tab = tk.Frame(self.notebook)
+
+        # Create a frame for the header (chat partner name and close button)
+        header_frame = tk.Frame(tab)
+        chat_partner_label = tk.Label(header_frame, text=chat_partner, font=("Helvetica", 12))
+        close_button = tk.Button(header_frame, text="X", command=lambda: self.close_specific_tab(chat_partner))
+
+        chat_partner_label.pack(side=tk.LEFT, padx=5)
+        close_button.pack(side=tk.RIGHT, padx=5)
+        header_frame.pack(fill="x")
+
         chat_area = tk.Text(tab, state="disabled", wrap="word")
         chat_area.pack(fill="both", expand=True)
         chat_area.tag_configure("sent", justify="right", lmargin1=100, rmargin=10, background="#DCF8C6")
@@ -111,6 +120,12 @@ class ChatPage(tk.Frame):
             self.update_messages(chat_partner)
             self.update_existing_discussions()
             self.tabs[chat_partner]["message_entry"].delete(0, tk.END)
+
+    def close_specific_tab(self, chat_partner):
+        if chat_partner in self.tabs:
+            tab_info = self.tabs[chat_partner]
+            self.notebook.forget(tab_info["tab"])
+            del self.tabs[chat_partner]
 
     def close_current_tab(self):
         current_tab = self.notebook.select()
