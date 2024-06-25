@@ -1,7 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 from datetime import datetime, timedelta
-from Front.Pages.utils import *
+import sys
+sys.path.append(".")
+from Backend.discussions import get_discussions_for_user, send_message as backend_send_message, get_messages, get_discussion_by_participants, encrypt_message
+from Backend.users import get_user_list, get_user_id_from_username
 
 class ChatPage(tk.Frame):
     def __init__(self, parent, controller, current_user):
@@ -59,7 +62,7 @@ class ChatPage(tk.Frame):
 
     def update_user_combobox(self):
         all_users = get_user_list()
-        existing_discussions = get_existing_discussions(self.current_user)
+        existing_discussions = self.get_existing_discussions(self.current_user)
         available_users = [user for user in all_users if user != self.current_user and user not in existing_discussions]
 
         if available_users:
@@ -86,7 +89,13 @@ class ChatPage(tk.Frame):
     def send_message(self):
         message = self.message_entry.get()
         if self.chat_partner and message:
-            send_message(self.current_user, self.chat_partner, message)
+            sender_id = get_user_id_from_username(self.current_user)
+            recipient_id = get_user_id_from_username(self.chat_partner)
+            discussion_id = get_discussion_by_participants([sender_id, recipient_id])
+            if not discussion_id:
+                discussion_id = create_discussion(f"{self.current_user}-{self.chat_partner}", [sender_id, recipient_id])
+            encrypted_content, session_key = encrypt_message(message)
+            backend_send_message(sender_id, discussion_id, encrypted_content, session_key)
             self.update_messages()
             self.update_existing_discussions()
             self.message_entry.delete(0, tk.END)
@@ -98,7 +107,7 @@ class ChatPage(tk.Frame):
         last_chat_date = ""
         today = datetime.now().date()
         if self.chat_partner:
-            messages = get_messages_between_users(self.current_user, self.chat_partner)
+            messages = self.get_messages_between_users(self.current_user, self.chat_partner)
             for msg in messages:
                 msg_date = datetime.strptime(msg['date'], "%Y-%m-%d %H:%M:%S")
                 if last_message_time is None or msg_date - last_message_time >= timedelta(minutes=15):
@@ -114,8 +123,22 @@ class ChatPage(tk.Frame):
         self.chat_area.config(state='disabled')
         self.update_banner(last_chat_date)
 
+    def get_existing_discussions(self, current_user):
+        user_id = get_user_id_from_username(current_user)
+        discussions = get_discussions_for_user(user_id)
+        return [d['partner_name'] for d in discussions]
+
+    def get_messages_between_users(self, current_user, chat_partner):
+        current_user_id = get_user_id_from_username(current_user)
+        chat_partner_id = get_user_id_from_username(chat_partner)
+        discussion_id = get_discussion_by_participants([current_user_id, chat_partner_id])
+        if not discussion_id:
+            return []
+        messages = get_messages(discussion_id)
+        return messages
+
     def update_existing_discussions(self):
-        existing_discussions = get_existing_discussions(self.current_user)
+        existing_discussions = self.get_existing_discussions(self.current_user)
         self.user_listbox.delete(0, tk.END)
         for user in existing_discussions:
             self.user_listbox.insert(tk.END, user)

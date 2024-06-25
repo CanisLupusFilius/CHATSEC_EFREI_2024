@@ -32,7 +32,7 @@ class App(ThemedTk):
 
         self.show_frame("HomePage")
 
-    def show_frame(self, page_name):
+    def show_frame(self, page_name, user=None):
         if page_name == "ChatPage":
             frame = ChatPage(parent=self.frames["HomePage"].master, controller=self, current_user=self.current_user)
             self.frames[page_name] = frame
