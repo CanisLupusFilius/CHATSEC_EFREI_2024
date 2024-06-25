@@ -3,7 +3,7 @@ from tkinter import messagebox, ttk
 from datetime import datetime, timedelta
 import sys
 sys.path.append(".")
-from Backend.discussions import get_discussions_for_user, send_message as backend_send_message, get_messages, get_discussion_by_participants, encrypt_message, create_discussion, decrypt_message
+from Backend.discussions import get_discussions_for_user, send_message as backend_send_message, get_messages, get_discussion_by_participants, encrypt_message, create_discussion
 from Backend.users import get_user_list, get_user_id_from_username
 
 class ChatPage(tk.Frame):
@@ -122,7 +122,6 @@ class ChatPage(tk.Frame):
         self.chat_area.config(state='normal')
         self.chat_area.delete(1.0, tk.END)
         last_message_time = None
-        last_chat_date = ""
         today = datetime.now().date()
         if self.chat_partner:
             messages = self.get_messages_between_users(self.current_user, self.chat_partner)
@@ -137,7 +136,6 @@ class ChatPage(tk.Frame):
                 tag = 'sent' if msg['sender'] == self.current_user else 'received'
                 self.chat_area.insert(tk.END, f"{msg['message']}\n", tag)
                 last_message_time = msg_date
-                last_chat_date = msg_date.strftime("%d/%m/%Y") if msg_date.date() != today else msg_date.strftime("%I:%M %p")
         self.chat_area.config(state='disabled')
 
     def get_existing_discussions(self, current_user):
