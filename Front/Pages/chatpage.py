@@ -22,7 +22,7 @@ class ChatPage(tk.Frame):
         right_frame = tk.Frame(self)  # Frame to hold the notebook and the close button
         self.notebook = ttk.Notebook(right_frame)
 
-        user_list_label = tk.Label(left_frame, text="Existing Discussions", font=("Helvetica", 16))
+        user_list_label = tk.Label(left_frame, text="CHATSEC", font=("Bodoni", 16))
         self.user_listbox = tk.Listbox(left_frame)
         self.user_listbox.bind("<<ListboxSelect>>", self.on_user_select)
         new_chat_button = tk.Button(left_frame, text="New Chat", command=self.create_new_chat_tab_if_absent)
@@ -32,13 +32,6 @@ class ChatPage(tk.Frame):
         self.user_listbox.pack(fill="both", expand=True)
         new_chat_button.pack(fill="x")
         logout_button.pack(fill="x")
-
-        banner_frame = tk.Frame(right_frame, bg="lightgray", height=30)
-        self.chat_partner_label = tk.Label(banner_frame, text="", anchor="w", bg="lightgray", font=("Helvetica", 12))
-        self.last_chat_date_label = tk.Label(banner_frame, text="", anchor="e", bg="lightgray", font=("Helvetica", 12))
-        self.chat_partner_label.pack(side=tk.LEFT, padx=10)
-        self.last_chat_date_label.pack(side=tk.RIGHT, padx=10)
-        banner_frame.pack(fill="x")
 
         self.chat_area = tk.Text(right_frame, state='disabled', wrap='word')
         self.chat_area.tag_configure('sent', justify='right', background='#DCF8C6')
@@ -145,7 +138,6 @@ class ChatPage(tk.Frame):
                 last_message_time = msg_date
                 last_chat_date = msg_date.strftime("%d/%m/%Y") if msg_date.date() != today else msg_date.strftime("%I:%M %p")
         self.chat_area.config(state='disabled')
-        self.update_banner(last_chat_date)
 
 
     def get_existing_discussions(self, current_user):
@@ -167,11 +159,3 @@ class ChatPage(tk.Frame):
         self.user_listbox.delete(0, tk.END)
         for user in existing_discussions:
             self.user_listbox.insert(tk.END, user)
-
-    def update_banner(self, last_chat_date):
-        if self.chat_partner:
-            self.chat_partner_label.config(text=f"Chat with: {self.chat_partner}")
-            self.last_chat_date_label.config(text=f"Last chat date: {last_chat_date}")
-        else:
-            self.chat_partner_label.config(text="")
-            self.last_chat_date_label.config(text="")
