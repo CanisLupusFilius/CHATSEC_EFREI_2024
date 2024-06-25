@@ -33,9 +33,10 @@ class ChatPage(tk.Frame):
         new_chat_button.pack(fill="x")
         logout_button.pack(fill="x")
 
+        # Initialize the chat area here but pack it in the create_chat_tab method
         self.chat_area = tk.Text(right_frame, state='disabled', wrap='word')
-        self.chat_area.tag_configure('sent', justify='right', background='#DCF8C6')
-        self.chat_area.tag_configure('received', justify='left', background='#FFFFFF')
+        self.chat_area.tag_configure('sent', justify='right', lmargin1=100, rmargin=10, background='#DCF8C6')
+        self.chat_area.tag_configure('received', justify='left', lmargin1=10, rmargin=100, background='#FFFFFF')
         self.chat_area.tag_configure('date', justify='center', font=('Helvetica', 8), foreground='gray')
 
         # Place close button at the top right of the right_frame
@@ -138,7 +139,6 @@ class ChatPage(tk.Frame):
                 last_message_time = msg_date
                 last_chat_date = msg_date.strftime("%d/%m/%Y") if msg_date.date() != today else msg_date.strftime("%I:%M %p")
         self.chat_area.config(state='disabled')
-
 
     def get_existing_discussions(self, current_user):
         user_id = get_user_id_from_username(current_user)
