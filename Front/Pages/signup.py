@@ -47,5 +47,6 @@ class SignupPage(tk.Frame):
         password = self.password_entry.get()
         if registering_back(username, password):
             messagebox.showinfo("Signup Info", f"Account created for {username}!")
+            self.controller.show_frame("HomePage")
         else:
             messagebox.showerror("Signup Error", "Username already exists!")

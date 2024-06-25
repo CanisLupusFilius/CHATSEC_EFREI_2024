@@ -65,6 +65,13 @@ def registering_back(username, password):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    cursor.execute("SELECT * FROM utilisateurs WHERE nom = %s", (nom,))
+    if cursor.fetchone():
+        cursor.close()
+        conn.close()
+        return False 
+
+
     # Générer une paire de clés RSA
     key = rsa.generate_private_key(
         public_exponent=65537,
