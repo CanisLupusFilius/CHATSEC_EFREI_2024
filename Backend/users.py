@@ -105,6 +105,8 @@ def registering_back(username, password):
 
     print(f"Utilisateur enregistré avec l'ID: {utilisateur_id}")
 
+    return True
+
 def get_user_list():
     conn = get_db_connection()
     cursor = conn.cursor()
