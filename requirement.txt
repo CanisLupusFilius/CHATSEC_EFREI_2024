@@ -1,6 +1,6 @@
-Git
-OpenSSL
-subprocess
 tkinter
-pip install ttkthemes
-pip install pillow
+ttkthemes
+pillow
+subprocess
+psycopg2-binary 
+bcrypt
