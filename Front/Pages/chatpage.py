@@ -12,8 +12,7 @@ from Backend.discussions import (
     create_discussion,
     decrypt_message,
 )
-from Backend.users import get_user_list, get_user_id_from_username
-
+from Backend.users import get_user_list, get_user_id_from_username, get_public_key_from_user_id, get_username
 
 class ChatPage(tk.Frame):
     def __init__(self, parent, controller, current_user):
@@ -125,19 +124,6 @@ class ChatPage(tk.Frame):
         self.update_messages(chat_partner)
         self.update_existing_discussions()
 
-    def send_message(self, chat_partner, message):
-        if chat_partner and message:
-            sender_id = get_user_id_from_username(self.current_user)
-            recipient_id = get_user_id_from_username(chat_partner)
-            discussion_id = get_discussion_by_participants([sender_id, recipient_id])
-            if not discussion_id:
-                discussion_id = create_discussion(f"{self.current_user}-{chat_partner}", [sender_id, recipient_id])
-            encrypted_content, session_key = encrypt_message(message)
-            backend_send_message(sender_id, discussion_id, encrypted_content, session_key)
-            self.update_messages(chat_partner)
-            self.update_existing_discussions()
-            self.tabs[chat_partner]["message_entry"].delete(0, tk.END)
-
     def close_specific_tab(self, chat_partner):
         if chat_partner in self.tabs:
             tab_info = self.tabs[chat_partner]
@@ -169,6 +155,54 @@ class ChatPage(tk.Frame):
         tag = "sent" if sender == self.current_user else "received"
         chat_area.insert(tk.END, f"{message}\n", tag)
 
+    def get_existing_discussions(self, current_user):
+        user_id = get_user_id_from_username(current_user)
+        discussions = get_discussions_for_user(user_id)
+        participants = []
+        for discussion in discussions:
+            participant_ids = discussion.get("participants", [])
+            for participant_id in participant_ids:
+                if participant_id != user_id:
+                    participant_name = get_username(participant_id)  # Convertir ID en nom d'utilisateur
+                    if participant_name:
+                        participants.append(participant_name)
+        return participants
+
+    def update_existing_discussions(self):
+        opened_users = set()
+        unopened_users = set()
+
+        existing_discussions = self.get_existing_discussions(self.current_user)
+        for participant_name in existing_discussions:
+            if participant_name in self.tabs:
+                opened_users.add(participant_name)
+            else:
+                unopened_users.add(participant_name)
+
+        self.opened_listbox.delete(0, tk.END)
+        self.unopened_listbox.delete(0, tk.END)
+
+        for user in opened_users:
+            self.opened_listbox.insert(tk.END, user)
+        for user in unopened_users:
+            self.unopened_listbox.insert(tk.END, user)
+
+    def send_message(self, chat_partner, message):
+        if chat_partner and message:
+            sender_id = get_user_id_from_username(self.current_user)
+            recipient_id = get_user_id_from_username(chat_partner)
+            discussion_id = get_discussion_by_participants([sender_id, recipient_id])
+            if not discussion_id:
+                discussion_id = create_discussion(f"{self.current_user}-{chat_partner}", [sender_id, recipient_id])
+
+            recipient_public_key = get_public_key_from_user_id(recipient_id)
+            encrypted_content, encrypted_session_key, iv = encrypt_message(message, recipient_public_key)
+
+            backend_send_message(sender_id, discussion_id, encrypted_content, encrypted_session_key, iv)
+            self.update_messages(chat_partner)
+            self.update_existing_discussions()
+            self.tabs[chat_partner]["message_entry"].delete(0, tk.END)
+
     def update_messages(self, chat_partner):
         if chat_partner not in self.tabs:
             return
@@ -188,29 +222,10 @@ class ChatPage(tk.Frame):
             last_message_time = msg_date
         chat_area.config(state="disabled")
 
-    def get_existing_discussions(self, current_user):
-        user_id = get_user_id_from_username(current_user)
-        discussions = get_discussions_for_user(user_id)
-        return [d["partner_name"] for d in discussions]
-
     def get_messages_between_users(self, current_user, chat_partner):
-        current_user_id = get_user_id_from_username(current_user)
-        chat_partner_id = get_user_id_from_username(chat_partner)
-        discussion_id = get_discussion_by_participants([current_user_id, chat_partner_id])
+        sender_id = get_user_id_from_username(current_user)
+        recipient_id = get_user_id_from_username(chat_partner)
+        discussion_id = get_discussion_by_participants([sender_id, recipient_id])
         if not discussion_id:
             return []
-        messages = get_messages(discussion_id)
-        return messages
-
-    def update_existing_discussions(self):
-        all_discussions = self.get_existing_discussions(self.current_user)
-        opened_discussions = [user for user in all_discussions if user in self.tabs]
-        unopened_discussions = [user for user in all_discussions if user not in self.tabs]
-
-        self.opened_listbox.delete(0, tk.END)
-        for user in opened_discussions:
-            self.opened_listbox.insert(tk.END, user)
-
-        self.unopened_listbox.delete(0, tk.END)
-        for user in unopened_discussions:
-            self.unopened_listbox.insert(tk.END, user)
+        return get_messages(discussion_id, sender_id)

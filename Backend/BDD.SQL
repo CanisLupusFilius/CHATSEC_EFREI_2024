@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS utilisateurs (
     utilisateur_id SERIAL PRIMARY KEY,
     nom VARCHAR(100),
-    cle_publique_rsa TEXT NOT NULL,
+    cle_publique_rsa BYTEA NOT NULL,
     cle_privee_rsa_chiffree BYTEA NOT NULL,
     sel_mot_de_passe BYTEA NOT NULL,  -- Utilisé pour renforcer le chiffrement de la clé privée
     mot_de_passe_hash BYTEA NOT NULL
@@ -35,3 +35,8 @@ CREATE TABLE IF NOT EXISTS messages (
     FOREIGN KEY (discussion_id) REFERENCES discussions(discussion_id),
     FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(utilisateur_id)
 );
+
+
+
+ALTER TABLE messages
+ADD COLUMN iv BYTEA; -- BLOB pour stocker l'IV (Byte Large Object)
